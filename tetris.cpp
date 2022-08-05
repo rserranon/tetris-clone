@@ -1,6 +1,7 @@
 #include <iostream>
 #include <ncurses.h>
 #include <thread>
+#include <vector>
 
 std::string tetromino[7];
 int nFieldWidth = 12;
@@ -62,8 +63,11 @@ WINDOW* InitBoard(){
     return w;
 }
 
-void DrawBoard(){
-
+void DisplayFrame(){
+    for (int y = 1; y < nScreenHeight; y++)
+            for (int x = 1; x < nScreenWidth; x++)
+                mvwaddch(win,y,x,screen[y * nScreenWidth + x]);
+    wrefresh(win);
 }
 
 int main() {
@@ -127,6 +131,7 @@ int main() {
     int nSpeed = 20;
     int nSpeedCounter = 0;
     bool bForceDown = false;
+    std::vector<int> vLines;
 
 
     win = InitBoard();
@@ -182,6 +187,21 @@ int main() {
                                 pField[(nCurrentY + py) * nFieldWidth + (nCurrentX + px)] = nCurrentPiece + 1;
 
                     // Check we have got any lines
+                    for (int py = 0; py < 4; py++)
+                        if (nCurrentY + py < nFieldHeight - 1)
+                        {
+                            bool bLine = true;
+                            for (int px = 1; px < nFieldWidth - 1; px++)
+                                bLine &= (pField[(nCurrentY + py) * nFieldWidth + px]) != 0;
+
+                            if (bLine)
+                            {
+                                // Remove line set to =
+                                for (int px = 1; px < nFieldWidth - 1; px++)
+                                    pField[(nCurrentY + py) * nFieldWidth + px] = 8;
+                                    vLines.push_back(nCurrentY + py);
+                            }
+                        }
 
                     // Choose next piece
                     nCurrentX = nFieldWidth / 2;
@@ -205,11 +225,23 @@ int main() {
                 if (tetromino[nCurrentPiece][Rotate(px, py, nCurrentRotation)] == 'X')
                     screen[(nCurrentY + py + 2) * nScreenWidth + (nCurrentX + px + 2)] = nCurrentPiece + 65;
 
+        if (!vLines.empty())
+        {
+            DisplayFrame();
+            std::this_thread::sleep_for(std::chrono::milliseconds(400));
+
+            for (auto &v : vLines)
+                for (int px = 1; px < nFieldWidth - 1; px++)
+                {
+                    for (int py = v; py > 0; py--)
+                        pField[py * nFieldWidth + px] = pField[(py - 1) * nFieldWidth + px];
+                    pField[px] = 0;
+                }
+            vLines.clear();
+        }
+
         // Display frame
-        for (int y = 1; y < nScreenHeight; y++)
-            for (int x = 1; x < nScreenWidth; x++)
-                mvwaddch(win,y,x,screen[y * nScreenWidth + x]);
-        wrefresh(win);
+        DisplayFrame();
     }
     
 
