@@ -2,6 +2,7 @@
 #include <ncurses.h>
 #include <thread>
 #include <vector>
+#include <cstdio>
 
 std::string tetromino[7];
 int nFieldWidth = 12;
@@ -131,6 +132,8 @@ int main() {
     int nSpeed = 20;
     int nSpeedCounter = 0;
     bool bForceDown = false;
+    int nPieceCount = 0;
+    int nScore = 0;
     std::vector<int> vLines;
 
 
@@ -186,6 +189,11 @@ int main() {
                             if (tetromino[nCurrentPiece][Rotate(px, py, nCurrentRotation)] != '.')
                                 pField[(nCurrentY + py) * nFieldWidth + (nCurrentX + px)] = nCurrentPiece + 1;
 
+                    nPieceCount++;
+                    if (nPieceCount % 10 == 0)
+                        if (nSpeed >= 10)   
+                            nSpeed--;
+
                     // Check we have got any lines
                     for (int py = 0; py < 4; py++)
                         if (nCurrentY + py < nFieldHeight - 1)
@@ -202,6 +210,10 @@ int main() {
                                     vLines.push_back(nCurrentY + py);
                             }
                         }
+
+                    nScore+=25;
+                    if (!vLines.empty())
+                        nScore+=(1 << vLines.size()) * 100;
 
                     // Choose next piece
                     nCurrentX = nFieldWidth / 2;
@@ -225,6 +237,10 @@ int main() {
                 if (tetromino[nCurrentPiece][Rotate(px, py, nCurrentRotation)] == 'X')
                     screen[(nCurrentY + py + 2) * nScreenWidth + (nCurrentX + px + 2)] = nCurrentPiece + 65;
 
+        // Draw score
+        
+        sprintf((char *)screen+(2 * nScreenWidth + nFieldWidth + 6), "SCORE: %d", nScore);
+
         if (!vLines.empty())
         {
             DisplayFrame();
@@ -244,7 +260,10 @@ int main() {
         DisplayFrame();
     }
     
-
+    mvwprintw(win,1,18,"*** GAME OVER ***");
+    mvwprintw(win,2,18,"SCORE: %d", nScore);
+    nodelay(win,FALSE);
+    ch = wgetch(win);
 
 
     endwin();
