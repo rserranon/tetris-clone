@@ -1,3 +1,8 @@
+// 		
+// The following code is a derivative work of the code from OneLoneCoder.com - Command Line Tetris, 		
+// which is licensed GPLv3. This code therefore is also licensed under the terms 		
+// of the GNU Public License, verison 3.
+//
 #include <iostream>
 #include <ncurses.h>
 #include <thread>
